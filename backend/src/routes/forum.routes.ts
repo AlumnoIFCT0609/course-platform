@@ -1,14 +1,15 @@
-
 // ============================================
-// FORUM ROUTES
+// ARCHIVO: backend/src/routes/forum.routes.ts
 // ============================================
 
 import express from 'express';
-import { authenticate, AuthRequest } from './auth';
+import { ForumService } from '../services/forum.service';
+import { authenticate } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-// Get categories
+// Obtener categorías
 router.get('/categories', async (req, res) => {
   try {
     const categories = await ForumService.getCategories();
@@ -18,7 +19,7 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// Get threads
+// Obtener threads
 router.get('/threads', async (req, res) => {
   try {
     const threads = await ForumService.getThreads({
@@ -34,7 +35,7 @@ router.get('/threads', async (req, res) => {
   }
 });
 
-// Create thread
+// Crear thread
 router.post('/threads', authenticate, async (req: AuthRequest, res) => {
   try {
     const thread = await ForumService.createThread(req.user!.userId, req.body);
@@ -44,20 +45,17 @@ router.post('/threads', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-// Get thread by ID
+// Obtener thread por ID
 router.get('/threads/:id', async (req: AuthRequest, res) => {
   try {
-    const thread = await ForumService.getThreadById(
-      req.params.id,
-      req.user?.userId
-    );
+    const thread = await ForumService.getThreadById(req.params.id, req.user?.userId);
     res.json(thread);
   } catch (error: any) {
     res.status(404).json({ error: error.message });
   }
 });
 
-// Get thread replies
+// Obtener respuestas del thread
 router.get('/threads/:id/replies', async (req: AuthRequest, res) => {
   try {
     const replies = await ForumService.getReplies(
@@ -71,14 +69,10 @@ router.get('/threads/:id/replies', async (req: AuthRequest, res) => {
   }
 });
 
-// Reply to thread
+// Responder a thread
 router.post('/threads/:id/replies', authenticate, async (req: AuthRequest, res) => {
   try {
-    const reply = await ForumService.createReply(
-      req.params.id,
-      req.user!.userId,
-      req.body
-    );
+    const reply = await ForumService.createReply(req.params.id, req.user!.userId, req.body);
     res.status(201).json(reply);
   } catch (error: any) {
     res.status(400).json({ error: error.message });

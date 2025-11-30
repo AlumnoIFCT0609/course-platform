@@ -196,4 +196,72 @@ export class AuthService {
   static async logout(refreshToken: string): Promise<void> {
     await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
   }
+  /**
+ * Obtener usuario por ID
+ */
+  static async getUserById(userId: string) {
+  const result = await pool.query(
+    `SELECT id, email, role, first_name, last_name, avatar_url, bio, created_at
+     FROM users WHERE id = $1`,
+    [userId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  return {
+    id: result.rows[0].id,
+    email: result.rows[0].email,
+    role: result.rows[0].role,
+    firstName: result.rows[0].first_name,
+    lastName: result.rows[0].last_name,
+    avatarUrl: result.rows[0].avatar_url,
+    bio: result.rows[0].bio,
+    createdAt: result.rows[0].created_at,
+  };
+}
+
+/**
+ * Cambiar contraseña
+ */
+static async changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  // Obtener usuario
+  const result = await pool.query(
+    'SELECT password_hash FROM users WHERE id = $1',
+    [userId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  // Verificar contraseña actual
+  const isValidPassword = await bcrypt.compare(
+    currentPassword,
+    result.rows[0].password_hash
+  );
+
+  if (!isValidPassword) {
+    throw new Error('Contraseña actual incorrecta');
+  }
+
+  // Hash de nueva contraseña
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+  // Actualizar contraseña
+  await pool.query(
+    'UPDATE users SET password_hash = $1 WHERE id = $2',
+    [newPasswordHash, userId]
+  );
+}
+
+
+
+
+
 }

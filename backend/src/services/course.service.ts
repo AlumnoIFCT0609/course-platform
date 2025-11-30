@@ -1,13 +1,10 @@
 // ============================================
-// COURSE SERVICE
+// ARCHIVO: backend/src/services/course.service.ts
 // ============================================
 
 import { Pool } from 'pg';
 import slugify from 'slugify';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import pool from '../config/database';
 
 interface CreateCourseDTO {
   tutorId: string;
@@ -32,6 +29,10 @@ interface Course {
   status: string;
   createdAt: Date;
 }
+
+// ============================================
+// COURSE SERVICE
+// ============================================
 
 export class CourseService {
   // Create course
@@ -294,5 +295,313 @@ export class CourseService {
     }
 
     await pool.query('DELETE FROM courses WHERE id = $1', [courseId]);
+  }
+}
+
+// ============================================
+// MODULE SERVICE
+// ============================================
+
+export class ModuleService {
+  // Create module
+  static async createModule(data: {
+    courseId: string;
+    tutorId: string;
+    title: string;
+    description?: string;
+    orderIndex: number;
+  }) {
+    // Verify course ownership
+    const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [
+      data.courseId,
+    ]);
+
+    if (course.rows.length === 0 || course.rows[0].tutor_id !== data.tutorId) {
+      throw new Error('Unauthorized');
+    }
+
+    const result = await pool.query(
+      `INSERT INTO course_modules (course_id, title, description, order_index)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [data.courseId, data.title, data.description || '', data.orderIndex]
+    );
+
+    return result.rows[0];
+  }
+
+  // Get course modules
+  static async getCourseModules(courseId: string) {
+    const result = await pool.query(
+      `SELECT 
+        cm.*,
+        COUNT(l.id) as lessons_count
+       FROM course_modules cm
+       LEFT JOIN lessons l ON l.module_id = cm.id
+       WHERE cm.course_id = $1
+       GROUP BY cm.id
+       ORDER BY cm.order_index`,
+      [courseId]
+    );
+
+    return result.rows;
+  }
+
+  // Update module
+  static async updateModule(moduleId: string, tutorId: string, updates: {
+    title?: string;
+    description?: string;
+    orderIndex?: number;
+    isPublished?: boolean;
+  }) {
+    // Verify ownership
+    const module = await pool.query(
+      `SELECT cm.id, c.tutor_id
+       FROM course_modules cm
+       JOIN courses c ON c.id = cm.course_id
+       WHERE cm.id = $1`,
+      [moduleId]
+    );
+
+    if (module.rows.length === 0) {
+      throw new Error('Module not found');
+    }
+
+    if (module.rows[0].tutor_id !== tutorId) {
+      throw new Error('Unauthorized');
+    }
+
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.title) {
+      updateFields.push(`title = $${paramIndex}`);
+      values.push(updates.title);
+      paramIndex++;
+    }
+
+    if (updates.description !== undefined) {
+      updateFields.push(`description = $${paramIndex}`);
+      values.push(updates.description);
+      paramIndex++;
+    }
+
+    if (updates.orderIndex !== undefined) {
+      updateFields.push(`order_index = $${paramIndex}`);
+      values.push(updates.orderIndex);
+      paramIndex++;
+    }
+
+    if (updates.isPublished !== undefined) {
+      updateFields.push(`is_published = $${paramIndex}`);
+      values.push(updates.isPublished);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    values.push(moduleId);
+
+    const query = `
+      UPDATE course_modules
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
+
+  // Delete module
+  static async deleteModule(moduleId: string, tutorId: string) {
+    const module = await pool.query(
+      `SELECT cm.id, c.tutor_id
+       FROM course_modules cm
+       JOIN courses c ON c.id = cm.course_id
+       WHERE cm.id = $1`,
+      [moduleId]
+    );
+
+    if (module.rows.length === 0) {
+      throw new Error('Module not found');
+    }
+
+    if (module.rows[0].tutor_id !== tutorId) {
+      throw new Error('Unauthorized');
+    }
+
+    await pool.query('DELETE FROM course_modules WHERE id = $1', [moduleId]);
+  }
+}
+
+// ============================================
+// LESSON SERVICE
+// ============================================
+
+export class LessonService {
+  // Create lesson
+  static async createLesson(data: {
+    moduleId: string;
+    title: string;
+    content?: string;
+    orderIndex: number;
+    durationMinutes?: number;
+    isFree?: boolean;
+  }) {
+    const result = await pool.query(
+      `INSERT INTO lessons (module_id, title, content, order_index, duration_minutes, is_free)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        data.moduleId,
+        data.title,
+        data.content || '',
+        data.orderIndex,
+        data.durationMinutes || 0,
+        data.isFree || false,
+      ]
+    );
+
+    return result.rows[0];
+  }
+
+  // Add video to lesson
+  static async addVideo(lessonId: string, videoData: {
+    title?: string;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    durationSeconds?: number;
+    sizeBytes?: number;
+  }) {
+    const result = await pool.query(
+      `INSERT INTO lesson_videos (lesson_id, title, video_url, thumbnail_url, duration_seconds, size_bytes)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        lessonId,
+        videoData.title || '',
+        videoData.videoUrl,
+        videoData.thumbnailUrl || null,
+        videoData.durationSeconds || 0,
+        videoData.sizeBytes || 0,
+      ]
+    );
+
+    return result.rows[0];
+  }
+
+  // Add document to lesson
+  static async addDocument(lessonId: string, documentData: {
+    title: string;
+    fileUrl: string;
+    fileType?: string;
+    sizeBytes?: number;
+  }) {
+    const result = await pool.query(
+      `INSERT INTO lesson_documents (lesson_id, title, file_url, file_type, size_bytes)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        lessonId,
+        documentData.title,
+        documentData.fileUrl,
+        documentData.fileType || null,
+        documentData.sizeBytes || 0,
+      ]
+    );
+
+    return result.rows[0];
+  }
+
+  // Get lesson by ID with content
+  static async getLessonById(lessonId: string) {
+    const lesson = await pool.query('SELECT * FROM lessons WHERE id = $1', [lessonId]);
+
+    if (lesson.rows.length === 0) {
+      throw new Error('Lesson not found');
+    }
+
+    const videos = await pool.query('SELECT * FROM lesson_videos WHERE lesson_id = $1', [
+      lessonId,
+    ]);
+
+    const documents = await pool.query(
+      'SELECT * FROM lesson_documents WHERE lesson_id = $1',
+      [lessonId]
+    );
+
+    return {
+      ...lesson.rows[0],
+      videos: videos.rows,
+      documents: documents.rows,
+    };
+  }
+
+  // Update lesson
+  static async updateLesson(lessonId: string, updates: {
+    title?: string;
+    content?: string;
+    orderIndex?: number;
+    durationMinutes?: number;
+    isFree?: boolean;
+  }) {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.title) {
+      updateFields.push(`title = $${paramIndex}`);
+      values.push(updates.title);
+      paramIndex++;
+    }
+
+    if (updates.content !== undefined) {
+      updateFields.push(`content = $${paramIndex}`);
+      values.push(updates.content);
+      paramIndex++;
+    }
+
+    if (updates.orderIndex !== undefined) {
+      updateFields.push(`order_index = $${paramIndex}`);
+      values.push(updates.orderIndex);
+      paramIndex++;
+    }
+
+    if (updates.durationMinutes !== undefined) {
+      updateFields.push(`duration_minutes = $${paramIndex}`);
+      values.push(updates.durationMinutes);
+      paramIndex++;
+    }
+
+    if (updates.isFree !== undefined) {
+      updateFields.push(`is_free = $${paramIndex}`);
+      values.push(updates.isFree);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    values.push(lessonId);
+
+    const query = `
+      UPDATE lessons
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
+
+  // Delete lesson
+  static async deleteLesson(lessonId: string) {
+    await pool.query('DELETE FROM lessons WHERE id = $1', [lessonId]);
   }
 }

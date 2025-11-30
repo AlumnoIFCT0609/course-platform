@@ -1,53 +1,29 @@
 // ============================================
-// COURSE ROUTES
+// ARCHIVO: backend/src/routes/course.routes.ts
 // ============================================
 
 import express from 'express';
-import { authenticate, authorize, AuthRequest } from './auth';
+import { CourseController, ModuleController, LessonController } from '../controllers/course.controller';
+import { authenticate, authorize } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-// Create course
-router.post('/', authenticate, authorize('tutor', 'admin'), async (req: AuthRequest, res) => {
-  try {
-    const course = await CourseService.createCourse({
-      tutorId: req.user!.userId,
-      ...req.body,
-    });
-    res.status(201).json(course);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// ===== RUTAS DE CURSOS =====
+router.get('/', CourseController.getCourses);
+router.post('/', authenticate, authorize('tutor', 'admin'), CourseController.createCourse);
+router.get('/:id', CourseController.getCourseById);
+router.put('/:id', authenticate, authorize('tutor', 'admin'), CourseController.updateCourse);
+router.delete('/:id', authenticate, authorize('tutor', 'admin'), CourseController.deleteCourse);
+router.post('/:id/publish', authenticate, authorize('tutor', 'admin'), CourseController.publishCourse);
 
-// Get courses
-router.get('/', async (req, res) => {
-  try {
-    const result = await CourseService.getCourses({
-      status: req.query.status as string,
-      tutorId: req.query.tutorId as string,
-      contentType: req.query.contentType as string,
-      search: req.query.search as string,
-      page: req.query.page ? parseInt(req.query.page as string) : undefined,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-    });
-    res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// ===== RUTAS DE MÓDULOS =====
+router.get('/:courseId/modules', ModuleController.getCourseModules);
+router.post('/:courseId/modules', authenticate, authorize('tutor', 'admin'), ModuleController.createModule);
 
-// Get course by ID
-router.get('/:id', async (req: AuthRequest, res) => {
-  try {
-    const course = await CourseService.getCourseById(
-      req.params.id,
-      req.user?.userId
-    );
-    res.json(course);
-  } catch (error: any) {
-    res.status(404).json({ error: error.message });
-  }
-});
+// ===== RUTAS DE LECCIONES =====
+router.post('/modules/:moduleId/lessons', authenticate, authorize('tutor', 'admin'), LessonController.createLesson);
+router.get('/lessons/:id', authenticate, LessonController.getLessonById);
+router.post('/lessons/:id/videos', authenticate, authorize('tutor', 'admin'), LessonController.addVideo);
+router.post('/lessons/:id/documents', authenticate, authorize('tutor', 'admin'), LessonController.addDocument);
 
 export default router;

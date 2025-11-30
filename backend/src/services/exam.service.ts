@@ -431,4 +431,24 @@ export class ExamService {
 
     await pool.query(`UPDATE exams SET status = 'published' WHERE id = $1`, [examId]);
   }
+  /**
+ * Obtener exámenes del curso
+ */
+static async getCourseExams(courseId: string) {
+  const result = await pool.query(
+    `SELECT 
+      e.*,
+      COUNT(q.id) as questions_count
+     FROM exams e
+     LEFT JOIN questions q ON q.exam_id = e.id
+     WHERE e.course_id = $1
+     GROUP BY e.id
+     ORDER BY e.created_at DESC`,
+    [courseId]
+  );
+
+  return result.rows;
+}
+
+
 }
