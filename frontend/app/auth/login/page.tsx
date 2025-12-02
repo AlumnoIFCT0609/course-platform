@@ -138,7 +138,7 @@ export default function LoginPage() {
 
           <div className="pt-8 border-t border-emerald-600">
             <p className="text-emerald-200 text-sm">
-              © 2024 Course Platform. Sistema de gestión educativa.
+              © 2026 Course Platform. Sistema de gestión educativa.
             </p>
           </div>
         </div>
