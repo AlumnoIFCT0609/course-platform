@@ -4,6 +4,10 @@
 // ============================================
 
 import { Request, Response, NextFunction } from 'express';
+import { TokenPayload } from '../types/token';
+import { AuthService } from '../services/auth.service';
+
+
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;
