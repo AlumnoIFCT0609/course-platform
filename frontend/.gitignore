@@ -10,9 +10,9 @@ node_modules/
 out/
 
 // Environment variables
-.env
-.env.local
-.env.production
+//.env
+//.env.local
+//.env.production
 
 // Build outputs
 build/
