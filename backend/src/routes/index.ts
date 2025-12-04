@@ -7,6 +7,7 @@ import authRoutes from './auth.routes';
 import courseRoutes from './course.routes';
 import examRoutes from './exam.routes';
 import forumRoutes from './forum.routes';
+import userRoutes from './user.routes';
 import enrollmentRoutes from './enrollment.routes';
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.use('/courses', courseRoutes);
 router.use('/exams', examRoutes);
 router.use('/forum', forumRoutes);
 router.use('/enrollments', enrollmentRoutes);
+router.use('/users', userRoutes);
 
 // 404 handler
 router.use('*', (req, res) => {

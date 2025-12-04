@@ -74,6 +74,11 @@ class ApiClient {
   }
 }
 
+
+
+
+
+
 export const api = new ApiClient(API_URL);
 
 // Funciones de autenticación
@@ -95,7 +100,7 @@ export const authApi = {
 export const courseApi = {
   getAll: (filters?: any) => {
     const params = new URLSearchParams(filters).toString();
-    return api.get(`/courses?${params}`);
+    return api.get(`/courses${params ? '?' + params : ''}`);
   },
   
   getById: (id: string) =>
@@ -109,4 +114,41 @@ export const courseApi = {
   
   delete: (id: string) =>
     api.delete(`/courses/${id}`),
+
+  publish: (id: string) =>
+    api.post(`/courses/${id}/publish`),
+
 };
+
+export const userApi = {
+  getAll: (params?: { role?: string; search?: string; page?: number; limit?: number; isActive?: boolean }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.role) queryParams.append('role', params.role);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+    
+    const query = queryParams.toString();
+    return api.get(`/users${query ? '?' + query : ''}`);
+  },
+  
+  getById: (id: string) =>
+    api.get(`/users/${id}`),
+  
+  create: (data: any) =>
+    api.post('/users', data),
+  
+  update: (id: string, data: any) =>
+    api.put(`/users/${id}`, data),
+  
+  delete: (id: string) =>
+    api.delete(`/users/${id}`),
+  
+ // toggleStatus: (id: string, isActive: boolean) =>
+ //   api.patch(`/users/${id}/toggle-status`, { isActive }),
+  
+  getStats: () =>
+    api.get('/users/stats'),
+};
+

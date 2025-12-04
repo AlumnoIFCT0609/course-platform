@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { testConnection } from './config/database';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import apiRoutes from './routes/index';
+import routes from './routes';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -61,6 +62,7 @@ app.get('/', (req, res) => {
 
 // API routes
 app.use('/api/v1', apiRoutes);
+app.use('/api/', routes);
 
 // ============================================
 // ERROR HANDLERS
