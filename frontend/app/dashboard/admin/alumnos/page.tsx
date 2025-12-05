@@ -12,6 +12,8 @@ import UserTable from '@/components/admin/UserTable';
 import UserModal from '@/components/admin/UserModal';
 import { userApi } from '@/lib/api';
 import { Plus, Search } from 'lucide-react';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
+
 
 interface User {
   id: string;
@@ -35,6 +37,10 @@ export default function AlumnosPage() {
     limit: 10,
     totalPages: 0,
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [alumnoToDelete, setAlumnoToDelete] = useState<User | null>(null);
+
+
   const router = useRouter();
 
   useEffect(() => {
@@ -94,17 +100,23 @@ export default function AlumnosPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (studentId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este alumno?')) return;
+  const handleDelete = (tutor: User) => {
+    setAlumnoToDelete(tutor);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async (hardDelete: boolean) => {
+    if (!alumnoToDelete) return;
 
     try {
-      await userApi.delete(studentId);
+      await userApi.delete(alumnoToDelete.id, hardDelete);
       loadStudents();
     } catch (error) {
-      console.error('Error al eliminar alumno:', error);
-      alert('Error al eliminar el alumno');
+      console.error('Error al eliminar tutor:', error);
+      alert('Error al eliminar el tutor');
     }
   };
+ 
 
   const handleToggleStatus = async (studentId: string, isActive: boolean) => {
     try {
@@ -213,6 +225,20 @@ export default function AlumnosPage() {
           onSave={handleSave}
         />
       )}
+       {/* Modal de confirmación */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setAlumnoToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        itemType="tutor"
+        itemName={alumnoToDelete ? `${alumnoToDelete.firstName} ${alumnoToDelete.lastName}` : ''}
+      />
+
+
+
     </div>
   );
 }

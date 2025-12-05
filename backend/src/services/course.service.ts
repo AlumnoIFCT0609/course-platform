@@ -30,16 +30,9 @@ interface Course {
   createdAt: Date;
 }
 
-// ============================================
-// COURSE SERVICE
-// ============================================
-
-
-
-
 export class CourseService {
 
-   private static mapCourseFromDB(row: any) {
+  private static mapCourseFromDB(row: any) {
     return {
       id: row.id,
       tutorId: row.tutor_id,
@@ -63,11 +56,9 @@ export class CourseService {
     };
   }
 
-  // Create course
   static async createCourse(data: CreateCourseDTO): Promise<Course> {
     const slug = slugify(data.title, { lower: true, strict: true });
 
-    // Check if slug exists
     const existing = await pool.query('SELECT id FROM courses WHERE slug = $1', [slug]);
 
     if (existing.rows.length > 0) {
@@ -95,31 +86,9 @@ export class CourseService {
       ]
     );
 
-
-
-  return this.mapCourseFromDB(result.rows[0]);
-    /*return {
-    id: row.id,
-    tutorId: row.tutor_id,
-    title: row.title,
-    slug: row.slug,
-    description: row.description,
-    thumbnailUrl: row.thumbnail_url,
-    contentType: row.content_type,
-    status: row.status,
-    durationHours: parseInt(row.duration_hours) || 0,
-    level: row.level,
-    language: row.language,
-    maxStudents: row.max_students,
-    enrollmentAutoApprove: row.enrollment_auto_approve,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    publishedAt: row.published_at,
-  };*/
-
+    return this.mapCourseFromDB(result.rows[0]);
   }
 
-  // Get course by ID
   static async getCourseById(courseId: string, userId?: string): Promise<any> {
     const query = `
       SELECT 
@@ -146,51 +115,48 @@ export class CourseService {
     return this.mapCourseFromDB(result.rows[0]);
   }
 
-  // Get all courses with filters
   static async getCourses(filters: {
-  status?: string;
-  tutorId?: string;
-  contentType?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
-}): Promise<{ courses: Course[]; total: number; page: number; totalPages: number }> {
-  const page = filters.page || 1;
-  const limit = filters.limit || 20;
-  const offset = (page - 1) * limit;
+    status?: string;
+    tutorId?: string;
+    contentType?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ courses: Course[]; total: number; page: number; totalPages: number }> {
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const offset = (page - 1) * limit;
 
-  let whereConditions: string[] = [];
-  let params: any[] = [];
-  let paramIndex = 1;
+    let whereConditions: string[] = [];
+    let params: any[] = [];
+    let paramIndex = 1;
 
-  // ✅ VERIFICA QUE NO SEA undefined NI "undefined"
-  if (filters.status && filters.status !== 'undefined') {
-    whereConditions.push(`c.status = $${paramIndex}`);
-    params.push(filters.status);
-    paramIndex++;
-  }
+    if (filters.status && filters.status !== 'undefined') {
+      whereConditions.push(`c.status = $${paramIndex}`);
+      params.push(filters.status);
+      paramIndex++;
+    }
 
-  if (filters.tutorId && filters.tutorId !== 'undefined') {
-    whereConditions.push(`c.tutor_id = $${paramIndex}`);
-    params.push(filters.tutorId);
-    paramIndex++;
-  }
+    if (filters.tutorId && filters.tutorId !== 'undefined') {
+      whereConditions.push(`c.tutor_id = $${paramIndex}`);
+      params.push(filters.tutorId);
+      paramIndex++;
+    }
 
-  if (filters.contentType && filters.contentType !== 'undefined') {
-    whereConditions.push(`c.content_type = $${paramIndex}`);
-    params.push(filters.contentType);
-    paramIndex++;
-  }
+    if (filters.contentType && filters.contentType !== 'undefined') {
+      whereConditions.push(`c.content_type = $${paramIndex}`);
+      params.push(filters.contentType);
+      paramIndex++;
+    }
 
-  if (filters.search && filters.search !== 'undefined') {
-    whereConditions.push(`(c.title ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`);
-    params.push(`%${filters.search}%`);
-    paramIndex++;
-  }
+    if (filters.search && filters.search !== 'undefined') {
+      whereConditions.push(`(c.title ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`);
+      params.push(`%${filters.search}%`);
+      paramIndex++;
+    }
 
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-    // Get total count
     const countQuery = `
       SELECT COUNT(*) as total
       FROM courses c
@@ -199,7 +165,6 @@ export class CourseService {
     const countResult = await pool.query(countQuery, params);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get courses
     const query = `
       SELECT 
         c.*,
@@ -218,35 +183,32 @@ export class CourseService {
     params.push(limit, offset);
     const result = await pool.query(query, params);
 
-    // ✅ MAPEAR snake_case a camelCase
-  const mappedCourses = result.rows.map(row => this.mapCourseFromDB(row));
-
-
+    // ✅ MAPEAR - Estaba devolviendo result.rows sin mapear
+    const mappedCourses = result.rows.map(row => this.mapCourseFromDB(row));
 
     return {
-      courses: result.rows,
+      courses: mappedCourses, // ← FIX: Devolver mapeado
       total,
       page,
       totalPages: Math.ceil(total / limit),
     };
   }
 
-  // Update course
+  // ✅ AÑADIR PARÁMETRO isAdmin
   static async updateCourse(
     courseId: string,
-    tutorId: string,
-    updates: Partial<CreateCourseDTO>
+    userId: string,
+    updates: Partial<CreateCourseDTO>,
+    isAdmin: boolean = false
   ): Promise<Course> {
-    // Verify ownership
-    const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [
-      courseId,
-    ]);
+    const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [courseId]);
 
     if (course.rows.length === 0) {
       throw new Error('Course not found');
     }
 
-    if (course.rows[0].tutor_id !== tutorId) {
+    // ✅ Admin puede editar cualquier curso
+    if (!isAdmin && course.rows[0].tutor_id !== userId) {
       throw new Error('Unauthorized');
     }
 
@@ -259,7 +221,6 @@ export class CourseService {
       values.push(updates.title);
       paramIndex++;
 
-      // Update slug
       const newSlug = slugify(updates.title, { lower: true, strict: true });
       updateFields.push(`slug = $${paramIndex}`);
       values.push(newSlug);
@@ -278,9 +239,34 @@ export class CourseService {
       paramIndex++;
     }
 
+    if (updates.contentType) {
+      updateFields.push(`content_type = $${paramIndex}`);
+      values.push(updates.contentType);
+      paramIndex++;
+    }
+
     if (updates.level) {
       updateFields.push(`level = $${paramIndex}`);
       values.push(updates.level);
+      paramIndex++;
+    }
+
+    if (updates.durationHours !== undefined) {
+      updateFields.push(`duration_hours = $${paramIndex}`);
+      values.push(updates.durationHours);
+      paramIndex++;
+    }
+
+    if (updates.maxStudents !== undefined) {
+      updateFields.push(`max_students = $${paramIndex}`);
+      values.push(updates.maxStudents);
+      paramIndex++;
+    }
+
+    // ✅ AÑADIR tutorId al update (admin puede cambiar tutor)
+    if (updates.tutorId && isAdmin) {
+      updateFields.push(`tutor_id = $${paramIndex}`);
+      values.push(updates.tutorId);
       paramIndex++;
     }
 
@@ -302,22 +288,18 @@ export class CourseService {
     return this.mapCourseFromDB(result.rows[0]);
   }
 
-  // Publish course
-  static async publishCourse(courseId: string, tutorId: string): Promise<void> {
-    // Verify ownership
-    const course = await pool.query('SELECT tutor_id, status FROM courses WHERE id = $1', [
-      courseId,
-    ]);
+  // ✅ AÑADIR PARÁMETRO isAdmin
+  static async publishCourse(courseId: string, userId: string, isAdmin: boolean = false): Promise<void> {
+    const course = await pool.query('SELECT tutor_id, status FROM courses WHERE id = $1', [courseId]);
 
     if (course.rows.length === 0) {
       throw new Error('Course not found');
     }
 
-    if (course.rows[0].tutor_id !== tutorId) {
+    if (!isAdmin && course.rows[0].tutor_id !== userId) {
       throw new Error('Unauthorized');
     }
 
-    // Check if course has content
     const modules = await pool.query(
       'SELECT COUNT(*) as count FROM course_modules WHERE course_id = $1',
       [courseId]
@@ -335,23 +317,31 @@ export class CourseService {
     );
   }
 
-  // Delete course
-  static async deleteCourse(courseId: string, userId: string, userRole: boolean ): Promise<void> {
-    const course = await pool.query('SELECT user_id FROM courses WHERE id = $1', [
-      courseId,
-    ]);
+  // ✅ ARREGLAR deleteCourse
+  static async deleteCourse(courseId: string, userId: string, isAdmin: boolean = false): Promise<void> {
+    const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [courseId]); // ← FIX: era user_id
 
     if (course.rows.length === 0) {
       throw new Error('Course not found');
     }
 
-     if (!userRole) {
+    if (!isAdmin && course.rows[0].tutor_id !== userId) {
       throw new Error('Unauthorized');
-     }
+    }
 
-    await pool.query('DELETE FROM courses WHERE id = $1', [courseId]);
+    // await pool.query('DELETE FROM courses WHERE id = $1', [courseId]);
+
+    // ✅ Soft delete: cambiar a 'archived' en vez de DELETE
+  await pool.query(
+    `UPDATE courses 
+     SET status = 'archived', updated_at = CURRENT_TIMESTAMP 
+     WHERE id = $1`,
+    [courseId]
+  );
   }
 }
+
+
 
 // ============================================
 // MODULE SERVICE

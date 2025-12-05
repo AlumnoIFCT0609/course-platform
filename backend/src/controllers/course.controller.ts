@@ -74,21 +74,25 @@ export class CourseController {
   }
 
   static async updateCourse(req: AuthRequest, res: Response) {
-    try {
-      const courseId = req.params.id;
-      const tutorId = req.user?.userId;
+  try {
+    const courseId = req.params.id;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
 
-      if (!tutorId) {
-        return res.status(401).json({ error: 'No autenticado' });
-      }
-
-      const course = await CourseService.updateCourse(courseId, tutorId, req.body);
-      res.json(course);
-    } catch (error: any) {
-      console.error('Error en updateCourse:', error);
-      res.status(400).json({ error: error.message });
+    if (!userId) {
+      return res.status(401).json({ error: 'No autenticado' });
     }
+
+    // ✅ Pasar true/false en vez de comprobar === 'admin'
+    const isAdmin = userRole === 'admin';
+    
+    const course = await CourseService.updateCourse(courseId, userId, req.body, isAdmin);
+    res.json(course);
+  } catch (error: any) {
+    console.error('Error en updateCourse:', error);
+    res.status(400).json({ error: error.message });
   }
+}
 
   static async deleteCourse(req: AuthRequest, res: Response) {
     try {

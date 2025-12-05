@@ -25,7 +25,7 @@ interface Course {
 interface CourseTableProps {
   courses: Course[];
   onEdit: (course: Course) => void;
-  onDelete: (courseId: string) => void;
+  onDelete: (course: Course) => void;
   onPublish: (courseId: string) => void;
 }
 

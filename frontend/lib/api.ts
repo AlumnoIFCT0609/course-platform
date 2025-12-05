@@ -121,8 +121,8 @@ export const courseApi = {
   update: (id: string, data: any) =>
     api.put(`/courses/${id}`, data),
   
-  delete: (id: string) =>
-    api.delete(`/courses/${id}`),
+  delete: (id: string, hardDelete: boolean = false) =>
+    api.delete(`/courses/${id}${hardDelete ? '?hardDelete=true' : ''}`),
 
   publish: (id: string) =>
     api.post(`/courses/${id}/publish`),
@@ -151,8 +151,8 @@ export const userApi = {
   update: (id: string, data: any) =>
     api.put(`/users/${id}`, data),
   
-  delete: (id: string) =>
-    api.delete(`/users/${id}`),
+ delete: (id: string, hardDelete: boolean = false) =>
+    api.delete(`/users/${id}${hardDelete ? '?hardDelete=true' : ''}`),
   
  toggleStatus: (id: string, isActive: boolean) =>
   api.patch(`/users/${id}/toggle-status`, { isActive }),

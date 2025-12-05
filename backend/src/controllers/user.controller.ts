@@ -85,19 +85,21 @@ export class UserController {
 
   // Eliminar usuario (soft delete)
   static async deleteUser(req: AuthRequest, res: Response) {
-    try {
-      if (req.user?.role !== 'admin') {
-        return res.status(403).json({ error: 'Acceso denegado' });
-      }
-
-      const userId = req.params.id;
-      await UserService.deleteUser(userId);
-      res.status(204).send();
-    } catch (error: any) {
-      console.error('Error en deleteUser:', error);
-      res.status(400).json({ error: error.message });
+  try {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
     }
+
+    const userId = req.params.id;
+    const hardDelete = req.query.hardDelete === 'true'; // ✅ Leer del query param
+    
+    await UserService.deleteUser(userId, hardDelete);
+    res.status(204).send();
+  } catch (error: any) {
+    console.error('Error en deleteUser:', error);
+    res.status(400).json({ error: error.message });
   }
+}
 
   // Activar/Desactivar usuario
   static async toggleUserStatus(req: AuthRequest, res: Response) {

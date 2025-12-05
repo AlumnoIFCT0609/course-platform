@@ -19,7 +19,7 @@ interface User {
 interface UserTableProps {
   users: User[];
   onEdit: (user: User) => void;
-  onDelete: (userId: string) => void;
+  onDelete: (user: User) => void;
   onToggleStatus: (userId: string, isActive: boolean) => void;
 }
 
@@ -113,7 +113,7 @@ export default function UserTable({
                     <Edit2 size={18} />
                   </button>
                   <button
-                    onClick={() => onDelete(user.id)}
+                    onClick={() => onDelete(user)}
                     className="text-red-600 hover:text-red-900"
                     title="Eliminar"
                   >

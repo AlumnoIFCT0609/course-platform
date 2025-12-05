@@ -233,7 +233,19 @@ export class UserService {
   }
 
   // Eliminar usuario (soft delete)
-  static async deleteUser(userId: string) {
+  static async deleteUser(userId: string, hardDelete: boolean = false) {
+  if (hardDelete) {
+    // ✅ Borrado físico
+    const result = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING id',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Usuario no encontrado');
+    }
+  } else {
+    // ✅ Soft delete (desactivar)
     const result = await pool.query(
       'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id',
       [userId]
@@ -243,6 +255,7 @@ export class UserService {
       throw new Error('Usuario no encontrado');
     }
   }
+}
 
   // Activar/Desactivar usuario
   static async toggleUserStatus(userId: string, isActive: boolean) {

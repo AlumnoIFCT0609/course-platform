@@ -12,6 +12,8 @@ import UserTable from '@/components/admin/UserTable';
 import UserModal from '@/components/admin/UserModal';
 import { userApi } from '@/lib/api';
 import { Plus, Search } from 'lucide-react';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
+
 
 interface User {
   id: string;
@@ -36,6 +38,9 @@ export default function TutoresPage() {
     limit: 10,
     totalPages: 0,
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [tutorToDelete, setTutorToDelete] = useState<User | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -95,11 +100,16 @@ export default function TutoresPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (tutorId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este tutor?')) return;
+  const handleDelete = (tutor: User) => {
+    setTutorToDelete(tutor);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async (hardDelete: boolean) => {
+    if (!tutorToDelete) return;
 
     try {
-      await userApi.delete(tutorId);
+      await userApi.delete(tutorToDelete.id, hardDelete);
       loadTutors();
     } catch (error) {
       console.error('Error al eliminar tutor:', error);
@@ -218,6 +228,17 @@ export default function TutoresPage() {
           onSave={handleSave}
         />
       )}
-    </div>
+       {/* Modal de confirmación */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setTutorToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        itemType="tutor"
+        itemName={tutorToDelete ? `${tutorToDelete.firstName} ${tutorToDelete.lastName}` : ''}
+      />
+    </div>  
   );
 }
