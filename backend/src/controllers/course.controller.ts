@@ -9,9 +9,16 @@ import { CourseService, ModuleService, LessonService } from '../services/course.
 export class CourseController {
   static async createCourse(req: AuthRequest, res: Response) {
     try {
-      const tutorId = req.user?.userId;
-      if (!tutorId) {
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+      if (!userId) {
         return res.status(401).json({ error: 'No autenticado' });
+      }
+      // ✅ Si es admin, puede asignar cualquier tutor. Si es tutor, usa su propio ID
+      const tutorId = userRole === 'admin' ? req.body.tutorId : userId;
+
+      if (!tutorId) {
+        return res.status(400).json({ error: 'Debe especificar un tutor' });
       }
 
       const course = await CourseService.createCourse({
@@ -86,13 +93,17 @@ export class CourseController {
   static async deleteCourse(req: AuthRequest, res: Response) {
     try {
       const courseId = req.params.id;
-      const tutorId = req.user?.userId;
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
 
-      if (!tutorId) {
+
+
+       if (!userId) {
         return res.status(401).json({ error: 'No autenticado' });
       }
 
-      await CourseService.deleteCourse(courseId, tutorId);
+      // ✅ Admin puede eliminar cualquier curso, tutor solo los suyos
+      await CourseService.deleteCourse(courseId, userId, userRole === 'admin');
       res.status(204).send();
     } catch (error: any) {
       console.error('Error en deleteCourse:', error);

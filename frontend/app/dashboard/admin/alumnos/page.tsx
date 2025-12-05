@@ -63,20 +63,26 @@ export default function AlumnosPage() {
   }, [loading, searchTerm, pagination.page]);
 
   const loadStudents = async () => {
-    try {
-      const response = await userApi.getAll({
-        role: 'student',
-        search: searchTerm || undefined,
-        page: pagination.page,
-        limit: pagination.limit,
-      });
+  try {
+    const response = await userApi.getAll({
+      role: 'student',
+      search: searchTerm || undefined,
+      page: pagination.page,
+      limit: pagination.limit,
+    });
 
-      setStudents(response.data.users);
-      setPagination(response.data.pagination);
-    } catch (error) {
-      console.error('Error al cargar alumnos:', error);
+    console.log('Students response:', response); // ← DEBUG
+
+    const data = response.data || response; // ← FIX
+    
+    setStudents(data.users || []);
+    if (data.pagination) {
+      setPagination(data.pagination);
     }
-  };
+  } catch (error) {
+    console.error('Error al cargar alumnos:', error);
+  }
+};
 
   const handleCreate = () => {
     setEditingStudent(null);

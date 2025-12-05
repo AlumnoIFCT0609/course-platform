@@ -336,8 +336,8 @@ export class CourseService {
   }
 
   // Delete course
-  static async deleteCourse(courseId: string, tutorId: string): Promise<void> {
-    const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [
+  static async deleteCourse(courseId: string, userId: string, userRole: boolean ): Promise<void> {
+    const course = await pool.query('SELECT user_id FROM courses WHERE id = $1', [
       courseId,
     ]);
 
@@ -345,9 +345,9 @@ export class CourseService {
       throw new Error('Course not found');
     }
 
-    if (course.rows[0].tutor_id !== tutorId) {
+     if (!userRole) {
       throw new Error('Unauthorized');
-    }
+     }
 
     await pool.query('DELETE FROM courses WHERE id = $1', [courseId]);
   }
