@@ -63,21 +63,27 @@ export default function TutoresPage() {
     }
   }, [loading, searchTerm, pagination.page]);
 
-  const loadTutors = async () => {
-    try {
-      const response = await userApi.getAll({
-        role: 'tutor',
-        search: searchTerm || undefined,
-        page: pagination.page,
-        limit: pagination.limit,
-      });
+ const loadTutors = async () => {
+  try {
+    const response = await userApi.getAll({
+      role: 'tutor',
+      search: searchTerm || undefined,
+      page: pagination.page,
+      limit: pagination.limit,
+    });
 
-      setTutors(response.data.users);
-      setPagination(response.data.pagination);
-    } catch (error) {
-      console.error('Error al cargar tutores:', error);
+    console.log('Tutors response:', response); // ← DEBUG
+    
+    const data = response.data || response; // ← FIX
+    
+    setTutors(data.users || []);
+    if (data.pagination) {
+      setPagination(data.pagination);
     }
-  };
+  } catch (error) {
+    console.error('Error al cargar tutores:', error);
+  }
+};
 
   const handleCreate = () => {
     setEditingTutor(null);

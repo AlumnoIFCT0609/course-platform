@@ -42,18 +42,22 @@ export default function AdminDashboard() {
   }, [router]);
 
   const loadStats = async () => {
-    try {
-      const response = await userApi.getStats();
-      setStats({
-        totalTutors: response.data.totalTutors,
-        totalStudents: response.data.totalStudents,
-        activeCourses: 0, // TODO: Implementar cuando tengas el endpoint
-        totalEnrollments: 0, // TODO: Implementar cuando tengas el endpoint
-      });
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
-    }
-  };
+  try {
+    const response = await userApi.getStats();
+    console.log('Stats response:', response); // ← DEBUG
+    
+    const data = response.data || response; // ← FIX
+    
+    setStats({
+      totalTutors: data.totalTutors || 0,
+      totalStudents: data.totalStudents || 0,
+      activeCourses: 0,
+      totalEnrollments: 0,
+    });
+  } catch (error) {
+    console.error('Error al cargar estadísticas:', error);
+  }
+};
 
   if (loading) {
     return (

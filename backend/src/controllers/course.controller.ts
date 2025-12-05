@@ -27,24 +27,32 @@ export class CourseController {
   }
 
   static async getCourses(req: AuthRequest, res: Response) {
-    try {
-      const filters = {
-        status: req.query.status as string,
-        tutorId: req.query.tutorId as string,
-        contentType: req.query.contentType as string,
-        search: req.query.search as string,
-        page: req.query.page ? parseInt(req.query.page as string) : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-      };
+  try {
+    const filters = {
+      status: req.query.status as string || undefined,  // ← Cambia esto
+      tutorId: req.query.tutorId as string || undefined,
+      contentType: req.query.contentType as string || undefined,
+      search: req.query.search as string || undefined,
+      page: req.query.page ? parseInt(req.query.page as string) : undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+    };
 
-      const result = await CourseService.getCourses(filters);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error en getCourses:', error);
-      res.status(400).json({ error: error.message });
-    }
+    // ✅ Limpiar valores undefined antes de enviar al service
+    const cleanFilters: any = {};
+    if (filters.status) cleanFilters.status = filters.status;
+    if (filters.tutorId) cleanFilters.tutorId = filters.tutorId;
+    if (filters.contentType) cleanFilters.contentType = filters.contentType;
+    if (filters.search) cleanFilters.search = filters.search;
+    if (filters.page) cleanFilters.page = filters.page;
+    if (filters.limit) cleanFilters.limit = filters.limit;
+
+    const result = await CourseService.getCourses(cleanFilters);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error en getCourses:', error);
+    res.status(400).json({ error: error.message });
   }
-
+}
   static async getCourseById(req: AuthRequest, res: Response) {
     try {
       const courseId = req.params.id;

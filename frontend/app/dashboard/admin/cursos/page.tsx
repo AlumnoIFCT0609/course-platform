@@ -24,6 +24,8 @@ interface Course {
   contentType: 'video' | 'document' | 'mixed';
   level: string;
   durationHours: number;
+  maxStudents?: number;  // ← Añade esto
+  language?: string;      // ← Añade esto
   createdAt: string;
 }
 
@@ -70,35 +72,43 @@ export default function CursosPage() {
     }
   }, [loading, searchTerm, statusFilter, pagination.page]);
 
-  const loadCourses = async () => {
-    try {
-      const response = await courseApi.getAll({
-        search: searchTerm || undefined,
-        status: statusFilter || undefined,
-        page: pagination.page,
-        limit: pagination.limit,
-      });
+ const loadCourses = async () => {
+  try {
+    const response = await courseApi.getAll({
+      search: searchTerm || undefined,
+      status: statusFilter || undefined,
+      page: pagination.page,
+      limit: pagination.limit,
+    });
 
-      setCourses(response.data.courses || response.data);
-      if (response.data.pagination) {
-        setPagination(response.data.pagination);
-      }
-    } catch (error) {
-      console.error('Error al cargar cursos:', error);
+    console.log('Courses response:', response); // ← DEBUG
+    
+    const data = response.data || response;
+    
+    setCourses(data.courses || data || []);
+    if (data.pagination) {
+      setPagination(data.pagination);
     }
-  };
+  } catch (error) {
+    console.error('Error al cargar cursos:', error);
+  }
+};
 
   const loadTutors = async () => {
-    try {
-      const response = await userApi.getAll({
-        role: 'tutor',
-        limit: 100,
-      });
-      setTutors(response.data.users);
-    } catch (error) {
-      console.error('Error al cargar tutores:', error);
-    }
-  };
+  try {
+    const response = await userApi.getAll({
+      role: 'tutor',
+      limit: 100,
+    });
+    
+    console.log('Tutors for dropdown:', response); // ← DEBUG
+    
+    const data = response.data || response;
+    setTutors(data.users || []);
+  } catch (error) {
+    console.error('Error al cargar tutores:', error);
+  }
+};
 
   const handleCreate = () => {
     setEditingCourse(null);

@@ -34,7 +34,35 @@ interface Course {
 // COURSE SERVICE
 // ============================================
 
+
+
+
 export class CourseService {
+
+   private static mapCourseFromDB(row: any) {
+    return {
+      id: row.id,
+      tutorId: row.tutor_id,
+      title: row.title,
+      slug: row.slug,
+      description: row.description,
+      thumbnailUrl: row.thumbnail_url,
+      contentType: row.content_type,
+      status: row.status,
+      durationHours: parseInt(row.duration_hours) || 0,
+      level: row.level,
+      language: row.language,
+      maxStudents: row.max_students,
+      enrollmentAutoApprove: row.enrollment_auto_approve,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      publishedAt: row.published_at,
+      tutorName: row.tutor_name,
+      tutorAvatar: row.tutor_avatar,
+      enrolledStudents: row.enrolled_students,
+    };
+  }
+
   // Create course
   static async createCourse(data: CreateCourseDTO): Promise<Course> {
     const slug = slugify(data.title, { lower: true, strict: true });
@@ -67,7 +95,28 @@ export class CourseService {
       ]
     );
 
-    return result.rows[0];
+
+
+  return this.mapCourseFromDB(result.rows[0]);
+    /*return {
+    id: row.id,
+    tutorId: row.tutor_id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description,
+    thumbnailUrl: row.thumbnail_url,
+    contentType: row.content_type,
+    status: row.status,
+    durationHours: parseInt(row.duration_hours) || 0,
+    level: row.level,
+    language: row.language,
+    maxStudents: row.max_students,
+    enrollmentAutoApprove: row.enrollment_auto_approve,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    publishedAt: row.published_at,
+  };*/
+
   }
 
   // Get course by ID
@@ -94,51 +143,52 @@ export class CourseService {
       throw new Error('Course not found');
     }
 
-    return result.rows[0];
+    return this.mapCourseFromDB(result.rows[0]);
   }
 
   // Get all courses with filters
   static async getCourses(filters: {
-    status?: string;
-    tutorId?: string;
-    contentType?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ courses: Course[]; total: number; page: number; totalPages: number }> {
-    const page = filters.page || 1;
-    const limit = filters.limit || 20;
-    const offset = (page - 1) * limit;
+  status?: string;
+  tutorId?: string;
+  contentType?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ courses: Course[]; total: number; page: number; totalPages: number }> {
+  const page = filters.page || 1;
+  const limit = filters.limit || 20;
+  const offset = (page - 1) * limit;
 
-    let whereConditions: string[] = [];
-    let params: any[] = [];
-    let paramIndex = 1;
+  let whereConditions: string[] = [];
+  let params: any[] = [];
+  let paramIndex = 1;
 
-    if (filters.status) {
-      whereConditions.push(`c.status = $${paramIndex}`);
-      params.push(filters.status);
-      paramIndex++;
-    }
+  // ✅ VERIFICA QUE NO SEA undefined NI "undefined"
+  if (filters.status && filters.status !== 'undefined') {
+    whereConditions.push(`c.status = $${paramIndex}`);
+    params.push(filters.status);
+    paramIndex++;
+  }
 
-    if (filters.tutorId) {
-      whereConditions.push(`c.tutor_id = $${paramIndex}`);
-      params.push(filters.tutorId);
-      paramIndex++;
-    }
+  if (filters.tutorId && filters.tutorId !== 'undefined') {
+    whereConditions.push(`c.tutor_id = $${paramIndex}`);
+    params.push(filters.tutorId);
+    paramIndex++;
+  }
 
-    if (filters.contentType) {
-      whereConditions.push(`c.content_type = $${paramIndex}`);
-      params.push(filters.contentType);
-      paramIndex++;
-    }
+  if (filters.contentType && filters.contentType !== 'undefined') {
+    whereConditions.push(`c.content_type = $${paramIndex}`);
+    params.push(filters.contentType);
+    paramIndex++;
+  }
 
-    if (filters.search) {
-      whereConditions.push(`(c.title ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`);
-      params.push(`%${filters.search}%`);
-      paramIndex++;
-    }
+  if (filters.search && filters.search !== 'undefined') {
+    whereConditions.push(`(c.title ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`);
+    params.push(`%${filters.search}%`);
+    paramIndex++;
+  }
 
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     // Get total count
     const countQuery = `
@@ -167,6 +217,11 @@ export class CourseService {
 
     params.push(limit, offset);
     const result = await pool.query(query, params);
+
+    // ✅ MAPEAR snake_case a camelCase
+  const mappedCourses = result.rows.map(row => this.mapCourseFromDB(row));
+
+
 
     return {
       courses: result.rows,
@@ -244,7 +299,7 @@ export class CourseService {
     `;
 
     const result = await pool.query(query, values);
-    return result.rows[0];
+    return this.mapCourseFromDB(result.rows[0]);
   }
 
   // Publish course

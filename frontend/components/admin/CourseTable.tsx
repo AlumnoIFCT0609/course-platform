@@ -9,11 +9,16 @@ import { Edit2, Trash2, CheckCircle, FileText, Archive } from 'lucide-react';
 interface Course {
   id: string;
   title: string;
+  slug: string;                    // ← AÑADE
+  description: string;             // ← AÑADE
+  tutorId: string;                 // ← AÑADE
   tutorName?: string;
   status: 'draft' | 'published' | 'archived';
   contentType: 'video' | 'document' | 'mixed';
   level: string;
   durationHours: number;
+  maxStudents?: number;            // ← AÑADE el ?
+  language?: string;               // ← AÑADE
   createdAt: string;
 }
 

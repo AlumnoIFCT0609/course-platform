@@ -65,6 +65,15 @@ class ApiClient {
     return this.handleResponse(response);
   }
 
+   async patch(endpoint: string, data: any) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response);
+  }
+
   async delete(endpoint: string) {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'DELETE',
@@ -145,8 +154,8 @@ export const userApi = {
   delete: (id: string) =>
     api.delete(`/users/${id}`),
   
- // toggleStatus: (id: string, isActive: boolean) =>
- //   api.patch(`/users/${id}/toggle-status`, { isActive }),
+ toggleStatus: (id: string, isActive: boolean) =>
+  api.patch(`/users/${id}/toggle-status`, { isActive }),
   
   getStats: () =>
     api.get('/users/stats'),

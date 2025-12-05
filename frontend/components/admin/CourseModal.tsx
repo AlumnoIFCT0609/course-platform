@@ -18,7 +18,7 @@ interface Course {
   contentType: 'video' | 'document' | 'mixed';
   level: string;
   durationHours: number;
-  maxStudents: number;
+  maxStudents?: number;
   language: string;
 }
 
