@@ -287,6 +287,56 @@ export class CourseService {
     const result = await pool.query(query, values);
     return this.mapCourseFromDB(result.rows[0]);
   }
+  static async updateCourseStatus(
+  courseId: string,
+  userId: string,
+  status: 'draft' | 'published' | 'archived',
+  isAdmin: boolean = false
+): Promise<void> {
+  const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [courseId]);
+
+  if (course.rows.length === 0) {
+    throw new Error('Course not found');
+  }
+
+  if (!isAdmin && course.rows[0].tutor_id !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  await pool.query(
+    'UPDATE courses SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+    [status, courseId]
+  );
+}
+// Cambiar estado del curso (toggle)
+static async toggleCourseStatus(
+  courseId: string,
+  userId: string,
+  newStatus: 'draft' | 'archived',
+  isAdmin: boolean = false
+): Promise<Course> {
+  const course = await pool.query('SELECT tutor_id FROM courses WHERE id = $1', [courseId]);
+
+  if (course.rows.length === 0) {
+    throw new Error('Course not found');
+  }
+
+  if (!isAdmin && course.rows[0].tutor_id !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  const result = await pool.query(
+    'UPDATE courses SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+    [newStatus, courseId]
+  );
+
+  return this.mapCourseFromDB(result.rows[0]);
+}
+
+
+
+
+
 
   // ✅ AÑADIR PARÁMETRO isAdmin
   static async publishCourse(courseId: string, userId: string, isAdmin: boolean = false): Promise<void> {

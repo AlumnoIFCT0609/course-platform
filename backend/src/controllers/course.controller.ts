@@ -93,6 +93,49 @@ export class CourseController {
     res.status(400).json({ error: error.message });
   }
 }
+static async updateCourseStatus(req: AuthRequest, res: Response) {
+  try {
+    const courseId = req.params.id;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    const { status } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const isAdmin = userRole === 'admin';
+    
+    await CourseService.updateCourseStatus(courseId, userId, status, isAdmin);
+    res.json({ message: 'Estado actualizado' });
+  } catch (error: any) {
+    console.error('Error en updateCourseStatus:', error);
+    res.status(400).json({ error: error.message });
+  }
+}
+
+static async toggleCourseStatus(req: AuthRequest, res: Response) {
+  try {
+    const courseId = req.params.id;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    const { status } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const isAdmin = userRole === 'admin';
+    
+    const course = await CourseService.toggleCourseStatus(courseId, userId, status, isAdmin);
+    res.json(course);
+  } catch (error: any) {
+    console.error('Error en toggleCourseStatus:', error);
+    res.status(400).json({ error: error.message });
+  }
+}
+
+
 
   static async deleteCourse(req: AuthRequest, res: Response) {
     try {

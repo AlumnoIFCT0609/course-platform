@@ -127,7 +127,10 @@ export const courseApi = {
   publish: (id: string) =>
     api.post(`/courses/${id}/publish`),
 
+  toggleStatus: (id: string, status: 'draft' | 'published' | 'archived') =>
+    api.patch(`/courses/${id}/toggle-status`, { status }),
 };
+
 
 export const userApi = {
   getAll: (params?: { role?: string; search?: string; page?: number; limit?: number; isActive?: boolean }) => {

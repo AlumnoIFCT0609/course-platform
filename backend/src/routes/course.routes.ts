@@ -15,6 +15,8 @@ router.get('/:id', CourseController.getCourseById);
 router.put('/:id', authenticate, authorize('tutor', 'admin'), CourseController.updateCourse);
 router.delete('/:id', authenticate, authorize('tutor', 'admin'), CourseController.deleteCourse);
 router.post('/:id/publish', authenticate, authorize('tutor', 'admin'), CourseController.publishCourse);
+//router.patch('/:id/status', CourseController.updateCourseStatus);
+router.patch('/:id/toggle-status', CourseController.toggleCourseStatus);
 
 // ===== RUTAS DE MÓDULOS =====
 router.get('/:courseId/modules', ModuleController.getCourseModules);

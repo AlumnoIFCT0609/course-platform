@@ -16,7 +16,7 @@ interface Course {
   status: 'draft' | 'published' | 'archived';
   contentType: 'video' | 'document' | 'mixed';
   level: string;
-  durationHours: number;
+  durationHours?: number;
   maxStudents?: number;            // ← AÑADE el ?
   language?: string;               // ← AÑADE
   createdAt: string;
@@ -27,6 +27,8 @@ interface CourseTableProps {
   onEdit: (course: Course) => void;
   onDelete: (course: Course) => void;
   onPublish: (courseId: string) => void;
+  onToggleStatus: (courseId: string, currentStatus: string) => void;
+  
 }
 
 export default function CourseTable({
@@ -88,6 +90,7 @@ export default function CourseTable({
     );
   }
 
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
@@ -140,8 +143,20 @@ export default function CourseTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(course.status)}
-                </td>
+  <button
+    onClick={() => onToggleStatus(course.id, course.status)}
+    disabled={course.status === 'published'}
+    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+      course.status === 'published'
+        ? 'bg-green-100 text-green-800 cursor-not-allowed'
+        : course.status === 'draft'
+        ? 'bg-yellow-100 text-yellow-800 cursor-pointer hover:opacity-80'
+        : 'bg-gray-100 text-gray-800 cursor-pointer hover:opacity-80'
+    }`}
+  >
+    {course.status === 'published' ? 'Publicado' : course.status === 'draft' ? 'Borrador' : 'Archivado'}
+  </button>
+</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {course.durationHours}h
                 </td>
@@ -167,7 +182,7 @@ export default function CourseTable({
                       <Edit2 size={18} />
                     </button>
                     <button
-                      onClick={() => onDelete(course.id)}
+                      onClick={() => onDelete(course)}
                       className="text-red-600 hover:text-red-900"
                       title="Eliminar"
                     >

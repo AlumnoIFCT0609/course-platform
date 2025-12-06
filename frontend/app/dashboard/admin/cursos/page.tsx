@@ -12,6 +12,7 @@ import CourseTable from '@/components/admin/CourseTable';
 import CourseModal from '@/components/admin/CourseModal';
 import { courseApi, userApi } from '@/lib/api';
 import { Plus, Search, Filter } from 'lucide-react';
+import DeleteConfirmationModal from '@/components/common/DeleteConfirmationModal';
 
 interface Course {
   id: string;
@@ -23,7 +24,7 @@ interface Course {
   status: 'draft' | 'published' | 'archived';
   contentType: 'video' | 'document' | 'mixed';
   level: string;
-  durationHours: number;
+  durationHours?: number;
   maxStudents?: number;  // ← Añade esto
   language?: string;      // ← Añade esto
   createdAt: string;
@@ -44,6 +45,8 @@ export default function CursosPage() {
     limit: 10,
     totalPages: 0,
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -110,6 +113,19 @@ export default function CursosPage() {
   }
 };
 
+  const handleToggleStatus = async (courseId: string, currentStatus: string) => {
+  // Solo cambia entre draft y archived
+  const newStatus = currentStatus === 'archived' ? 'draft' : 'archived';
+
+  try {
+    await courseApi.toggleStatus(courseId, newStatus);
+    loadCourses();
+  } catch (error) {
+    console.error('Error al cambiar estado:', error);
+    alert('Error al cambiar el estado del curso');
+  }
+  };
+
   const handleCreate = () => {
     setEditingCourse(null);
     setIsModalOpen(true);
@@ -120,17 +136,25 @@ export default function CursosPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (courseId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este curso?')) return;
+  const handleDelete = (course: Course) => {  // ← Cambiar a Course
+  setCourseToDelete(course);  // ← Guardar el curso
+  setIsDeleteModalOpen(true); // ← Abrir modal
+};
 
-    try {
-      await courseApi.delete(courseId);
-      loadCourses();
-    } catch (error) {
-      console.error('Error al eliminar curso:', error);
-      alert('Error al eliminar el curso');
-    }
-  };
+const confirmDelete = async (hardDelete: boolean) => {  // ← Nueva función
+  if (!courseToDelete) return;
+
+  try {
+    await courseApi.delete(courseToDelete.id, hardDelete);
+    setIsDeleteModalOpen(false);
+    setCourseToDelete(null);
+
+    await loadCourses();
+  } catch (error) {
+    console.error('Error al eliminar curso:', error);
+    alert('Error al eliminar el curso');
+  }
+};
 
   const handlePublish = async (courseId: string) => {
     try {
@@ -222,6 +246,7 @@ export default function CursosPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onPublish={handlePublish}
+            onToggleStatus={handleToggleStatus}
           />
 
           {/* Paginación */}
@@ -262,6 +287,19 @@ export default function CursosPage() {
           onSave={handleSave}
         />
       )}
+      {/* Modal de confirmación */}
+{isDeleteModalOpen && (
+  <DeleteConfirmationModal
+    isOpen={isDeleteModalOpen}
+    onClose={() => {
+      setIsDeleteModalOpen(false);
+      setCourseToDelete(null);
+    }}
+    onConfirm={confirmDelete}
+    itemType="curso"
+    itemName={courseToDelete?.title || ''}
+  />
+)}
     </div>
   );
 }

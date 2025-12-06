@@ -233,7 +233,7 @@ export default function AlumnosPage() {
           setAlumnoToDelete(null);
         }}
         onConfirm={confirmDelete}
-        itemType="tutor"
+        itemType="alumno"
         itemName={alumnoToDelete ? `${alumnoToDelete.firstName} ${alumnoToDelete.lastName}` : ''}
       />
 

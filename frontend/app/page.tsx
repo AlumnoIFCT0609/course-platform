@@ -13,10 +13,10 @@ export default function HomePage() {
 
   useEffect(() => {
     // Verificar si hay un token
-    const token = localStorage.getItem('accessToken');
+    //const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
 
-    if (token && user) {
+    if (user) {
       const userData = JSON.parse(user);
       // Redirigir según el rol
       router.push(`/dashboard/${userData.role}`);

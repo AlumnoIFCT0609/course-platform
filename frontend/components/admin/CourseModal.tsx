@@ -17,9 +17,10 @@ interface Course {
   status: 'draft' | 'published' | 'archived';
   contentType: 'video' | 'document' | 'mixed';
   level: string;
-  durationHours: number;
+  durationHours?: number;
   maxStudents?: number;
-  language: string;
+  language?: string;
+  createdAt: string;
 }
 
 interface CourseModalProps {
@@ -59,9 +60,9 @@ export default function CourseModal({
         tutorId: course.tutorId,
         contentType: course.contentType,
         level: course.level,
-        durationHours: course.durationHours,
-        maxStudents: course.maxStudents,
-        language: course.language,
+        durationHours: course.durationHours || 0,    // ← Valor por defecto
+        maxStudents: course.maxStudents || 15,      // ← Valor por defecto
+        language: course.language || 'es',          // ← Valor por defecto
         status: course.status,
       });
     }
@@ -285,22 +286,7 @@ export default function CourseModal({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estado
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="draft">Borrador</option>
-                <option value="published">Publicado</option>
-                <option value="archived">Archivado</option>
-              </select>
-            </div>
+            
           </div>
 
           {/* Buttons */}
