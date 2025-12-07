@@ -36,6 +36,7 @@ export default function CourseTable({
   onEdit,
   onDelete,
   onPublish,
+  onToggleStatus, 
 }: CourseTableProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {

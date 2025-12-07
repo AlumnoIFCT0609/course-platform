@@ -81,6 +81,11 @@ class ApiClient {
     });
     return this.handleResponse(response);
   }
+  
+
+
+
+
 }
 
 
@@ -164,3 +169,79 @@ export const userApi = {
     api.get('/users/stats'),
 };
 
+// Módulos
+export const moduleApi = {
+  getByCourse: (courseId: string) =>
+    api.get(`/courses/${courseId}/modules`),
+  
+  create: (courseId: string, data: any) =>
+    api.post(`/courses/${courseId}/modules`, data),
+};
+
+// Lecciones
+export const lessonApi = {
+  getById: (id: string) =>
+    api.get(`/courses/lessons/${id}`),
+  
+  create: (moduleId: string, data: any) =>
+    api.post(`/courses/modules/${moduleId}/lessons`, data),
+  
+  addVideo: (lessonId: string, data: any) =>
+    api.post(`/courses/lessons/${lessonId}/videos`, data),
+  
+  addDocument: (lessonId: string, data: any) =>
+    api.post(`/courses/lessons/${lessonId}/documents`, data),
+};
+
+// Inscripciones (Enrollments)
+export const enrollmentApi = {
+  // Para estudiantes
+  request: (courseId: string) =>
+    api.post('/enrollments', { courseId }),
+  
+  getMyEnrollments: (status?: string) =>
+    api.get(`/enrollments${status ? '?status=' + status : ''}`),
+  
+  // Para tutores - ✅ CORREGIR ESTA RUTA
+  getCourseEnrollments: (courseId: string, status?: string) =>
+    api.get(`/enrollments/courses/${courseId}/enrollments${status ? '?status=' + status : ''}`),
+  
+  approve: (enrollmentId: string) =>
+    api.post(`/enrollments/${enrollmentId}/approve`),
+  
+  reject: (enrollmentId: string) =>
+    api.post(`/enrollments/${enrollmentId}/reject`),
+};
+
+// Exámenes
+export const examApi = {
+  // Para tutores
+  create: (courseId: string, data: any) =>
+    api.post(`/exams/courses/${courseId}/exams`, data),
+  
+  getByCourse: (courseId: string) =>
+    api.get(`/exams/courses/${courseId}/exams`),
+  
+  getById: (id: string) =>
+    api.get(`/exams/${id}`),
+  
+  addQuestion: (examId: string, data: any) =>
+    api.post(`/exams/${examId}/questions`, data),
+  
+  publish: (id: string) =>
+    api.post(`/exams/${id}/publish`),
+  
+  // Para estudiantes
+  submit: (id: string, answers: any[]) =>
+    api.post(`/exams/${id}/submit`, { answers }),
+  
+  // Calificaciones
+  gradeSubmission: (submissionId: string, data: any) =>
+    api.post(`/exams/submissions/${submissionId}/grade`, data),
+  
+  getPendingGrading: () =>
+    api.get('/exams/tutors/pending-grading'),
+  
+  getMySubmissions: (courseId?: string) =>
+    api.get(`/exams/students/submissions${courseId ? '?courseId=' + courseId : ''}`),
+};
