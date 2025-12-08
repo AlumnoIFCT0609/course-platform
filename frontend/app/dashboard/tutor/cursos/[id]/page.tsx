@@ -9,6 +9,8 @@ import { courseApi, moduleApi, enrollmentApi, examApi } from '@/lib/api';
 import { Plus, ChevronDown, ChevronRight, Users, BookOpen, Check, X, FileText } from 'lucide-react';
 import ModuleModal from '@/components/tutor/ModuleModal';
 import LessonModal from '@/components/tutor/LessonModal';
+import BackButton from '@/components/common/BackButton';
+import LogoutButton from '@/components/common/LogoutButton';
 
 export default function CourseManagement() {
   const [course, setCourse] = useState<any>(null);
@@ -113,6 +115,8 @@ export default function CourseManagement() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-emerald-700 text-white p-6">
+        <LogoutButton />
+         <BackButton href="/dashboard/tutor" label="Volver" />
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold">{course?.title}</h1>
           <p className="mt-2">Gestión del curso</p>

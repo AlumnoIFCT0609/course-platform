@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { courseApi } from '@/lib/api';
 import { BookOpen, Plus, Edit2, Eye } from 'lucide-react';
+import LogoutButton from '@/components/common/LogoutButton';
 
 interface Course {
   id: string;
@@ -70,6 +71,7 @@ export default function TutorDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-emerald-700 text-white p-6">
+        <LogoutButton />
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold">Dashboard de Tutor</h1>
           <p className="mt-2">Bienvenido, {user?.firstName} {user?.lastName}</p>
