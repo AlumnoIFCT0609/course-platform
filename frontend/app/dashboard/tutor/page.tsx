@@ -81,13 +81,7 @@ export default function TutorDashboard() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Mis Cursos</h2>
-          <Link
-            href="/dashboard/tutor/cursos/nuevo"
-            className="flex items-center space-x-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700"
-          >
-            <Plus size={20} />
-            <span>Nuevo Curso</span>
-          </Link>
+         
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
